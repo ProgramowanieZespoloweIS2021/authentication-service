@@ -13,7 +13,7 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
-    public User createUser(User user) {
+    public User encryptUserPassword(User user) {
         user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         return user;
     }
