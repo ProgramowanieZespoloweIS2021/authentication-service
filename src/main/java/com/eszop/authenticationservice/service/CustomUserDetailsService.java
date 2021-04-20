@@ -1,4 +1,4 @@
-package com.eszop.authenticationservice.security;
+package com.eszop.authenticationservice.service;
 
 import com.eszop.authenticationservice.domain.AppUser;
 import org.springframework.beans.factory.annotation.Autowired;

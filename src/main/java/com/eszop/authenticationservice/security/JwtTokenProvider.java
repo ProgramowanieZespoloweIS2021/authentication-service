@@ -1,17 +1,19 @@
 package com.eszop.authenticationservice.security;
 
-import com.eszop.authenticationservice.domain.AppUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,33 +24,27 @@ public class JwtTokenProvider {
     @Value("${jwt.token.expiration}")
     private long expirationTime;
 
-    @Value("${security.jwt.secret:JwtSecretKey}")
-    private String secret;
+    private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
-
-    public String generateToken(AppUser user) {
-        Claims claims = Jwts.claims().setSubject(user.getUsername());
-        claims.put("id", user.getId());
-        claims.put("role", user.getRole());
-
+    public String generateToken(Authentication auth) {
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + expirationTime);
 
         return Jwts.builder()
-                   .setClaims(claims)
-                   .setIssuedAt(now)
-                   .setExpiration(expirationDate)
-                   .signWith(SignatureAlgorithm.HS256, secret)
-                   .compact();
+                .setSubject(auth.getName())
+                .claim("authorities", auth.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
+                .setIssuedAt(now)
+                .setExpiration(expirationDate)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret.getBytes())
-                .parseClaimsJws(token)
-                .getBody();
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build();
+        return jwtParser.parseClaimsJws(token).getBody();
     }
 
     public Authentication getAuthentication(String token) {

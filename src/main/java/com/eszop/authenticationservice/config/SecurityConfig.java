@@ -1,6 +1,11 @@
-package com.eszop.authenticationservice.security;
+package com.eszop.authenticationservice.config;
 
+import com.eszop.authenticationservice.service.CustomUserDetailsService;
+import com.eszop.authenticationservice.security.JwtTokenAuthenticationFilter;
+import com.eszop.authenticationservice.security.JwtTokenProvider;
+import com.eszop.authenticationservice.security.JwtUsernameAndPasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -16,13 +21,16 @@ import javax.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityTokenConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
     @Autowired
     private JwtTokenProvider provider;
+
+    @Value("${login.path}")
+    private String loginPath;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -40,11 +48,13 @@ public class SecurityTokenConfig extends WebSecurityConfigurerAdapter {
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
-            .exceptionHandling().authenticationEntryPoint((req, rsp, e) -> rsp.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+            .exceptionHandling()
+                .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
         .and()
-            .addFilterBefore(new JwtTokenAuthenticationFilter(provider), UsernamePasswordAuthenticationFilter.class)
-        .authorizeRequests()
-            .antMatchers(HttpMethod.POST, "/auth/**").permitAll()
-            .anyRequest().authenticated();
+             .addFilterAfter(new JwtTokenAuthenticationFilter(provider), UsernamePasswordAuthenticationFilter.class)
+             .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), provider, loginPath))
+             .authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                .anyRequest().authenticated();
     }
 }
