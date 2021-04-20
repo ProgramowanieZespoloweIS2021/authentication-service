@@ -22,6 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // TODO: Here we have to make a call to the user service to get user by username
         final List<AppUser> mockUsers = Arrays.asList(
                 new AppUser(1, "John", encoder.encode("12345"), "USER"),
                 new AppUser(2, "Admin", encoder.encode("12345"), "ADMIN")
