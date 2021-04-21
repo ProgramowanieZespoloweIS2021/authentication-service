@@ -10,3 +10,27 @@
 ```
 ![CI/CD](https://github.com/<user>/<repository>/actions/workflows/ci.yml/badge.svg)
 ```
+
+
+USAGE
+registration -> POST http://localhost:8080/auth/user
+example body: {
+                  "firstName": "test",
+                  "surname": "test",
+                  "password": "test",
+                  "email": "test"
+              }
+              
+
+login -> POST http://localhost:8080/auth/login
+example body: {
+                  "email": "test",
+                  "password": "test"
+              } ->
+we receive token in header
+
+example api -> GET http://localhost:8080/test
+with authorizatoin token 
+-> than we receive {
+                       "test": "Hello World!"
+                   } 
