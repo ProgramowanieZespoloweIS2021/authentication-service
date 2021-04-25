@@ -1,5 +1,6 @@
 package com.eszop.authenticationservice.security;
 
+import com.eszop.authenticationservice.repository.BlacklistedJwtRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
@@ -21,10 +22,16 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenProvider {
 
+    private final BlacklistedJwtRepository blacklistedJwtRepository;
+
     @Value("${jwt.token.expiration}")
     private long expirationTime;
 
     private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+
+    public JwtTokenProvider(BlacklistedJwtRepository blacklistedJwtRepository) {
+        this.blacklistedJwtRepository = blacklistedJwtRepository;
+    }
 
     public String generateToken(Authentication auth) {
         Date now = new Date();
@@ -40,7 +47,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    private Claims getAllClaimsFromToken(String token) {
+    public Claims getAllClaimsFromToken(String token) {
         JwtParser jwtParser = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build();
@@ -61,7 +68,10 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Claims claims = getAllClaimsFromToken(token);
-            return !claims.getExpiration().before(new Date());
+            if (claims.getExpiration().before(new Date())) {
+                return false;
+            }
+            return blacklistedJwtRepository.findById(token).isEmpty();
         } catch (JwtException | IllegalArgumentException e) {
             throw new RuntimeException("Expired or invalid JWT token");
         }
