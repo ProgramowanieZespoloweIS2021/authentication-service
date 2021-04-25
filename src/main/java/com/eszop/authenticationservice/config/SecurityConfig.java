@@ -23,14 +23,17 @@ import javax.servlet.http.HttpServletResponse;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private final CustomUserDetailsService userDetailsService;
 
-    @Autowired
-    private JwtTokenProvider provider;
+    private final JwtTokenProvider provider;
 
     @Value("${login.path}")
     private String loginPath;
+
+    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtTokenProvider provider) {
+        this.userDetailsService = userDetailsService;
+        this.provider = provider;
+    }
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
