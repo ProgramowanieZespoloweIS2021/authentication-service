@@ -21,16 +21,19 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
-        RestTemplate restTemplate = new RestTemplate();
-        AppUser[] response = restTemplate.getForObject(userServiceUrl + "/users?email=" + username, AppUser[].class);
+        AppUser appUser = loadAppUserByUsername(username);
         List<GrantedAuthority> grantedAuthorities = AuthorityUtils
                 .commaSeparatedStringToAuthorityList("ROLE_USER");
+
+        return new User(appUser.getEmail(), appUser.getPassword(), grantedAuthorities);
+    }
+
+    public AppUser loadAppUserByUsername(String username) throws UsernameNotFoundException {
+        RestTemplate restTemplate = new RestTemplate();
+        AppUser[] response = restTemplate.getForObject(userServiceUrl + "/users?email=" + username, AppUser[].class);
         if (response == null || response[0] == null) {
             throw new UsernameNotFoundException("Username: " + username + " not found");
         }
-        AppUser appUser = response[0];
-
-        return new User(appUser.getEmail(), appUser.getPassword(), grantedAuthorities);
+        return response[0];
     }
 }
