@@ -27,7 +27,7 @@ public class AuthController {
     public ResponseEntity<?> getCurrentUser(Principal principal) {
         return Optional.ofNullable(principal)
                 .map(Principal::getName)
-                .map(userService::loadUserByUsername)
+                .map(userService::loadAppUserByUsername)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
