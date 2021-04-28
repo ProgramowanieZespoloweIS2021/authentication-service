@@ -53,15 +53,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-            .csrf().disable()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-            .exceptionHandling()
+                .cors().and().csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .exceptionHandling()
                 .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
-        .and()
-             .addFilterAfter(new JwtTokenAuthenticationFilter(provider), UsernamePasswordAuthenticationFilter.class)
-             .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), provider, loginPath))
-             .authorizeRequests()
+                .and()
+                .addFilterAfter(new JwtTokenAuthenticationFilter(provider), UsernamePasswordAuthenticationFilter.class)
+                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), provider, loginPath))
+                .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/auth/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/auth/user").permitAll()
                 .anyRequest().authenticated()
